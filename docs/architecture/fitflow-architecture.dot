@@ -1,0 +1,64 @@
+digraph FitFlow {
+  graph [rankdir=TB, bgcolor="white", pad=0.25, nodesep=0.35, ranksep=0.55, fontname="Arial", fontsize=11, labelloc="t", label="FitFlow - High-Level Architecture"];
+  node [shape=box, style="rounded,filled", fontname="Arial", fontsize=10, margin="0.12,0.08", color="#24527a", fillcolor="#eef5fb"];
+  edge [fontname="Arial", fontsize=8.5, color="#4d6478", arrowsize=0.7];
+
+  subgraph cluster_clients {
+    label="Client Layer"; color="#8fb8d8"; style="rounded";
+    ios [label="Flutter iOS App"];
+    android [label="Flutter Android App"];
+    web [label="Flutter Web App"];
+  }
+
+  edgegw [label="CDN / WAF / Load Balancer\nTLS + rate limiting", fillcolor="#fff4df", color="#d39b3a"];
+  auth0 [label="Auth0\nOIDC / OAuth 2.0 / MFA", fillcolor="#f5edff", color="#7b5aa6"];
+
+  subgraph cluster_backend {
+    label="Application & Real-Time Layer"; color="#85b68d"; style="rounded";
+    api [label="NestJS API\nREST + validation + authorization", fillcolor="#eef8ef", color="#4c8b56"];
+    ws [label="WebSocket Gateway\nReal-time social / progress updates", fillcolor="#eef8ef", color="#4c8b56"];
+    jobs [label="Background Jobs / Queue\nnotifications, async processing", fillcolor="#eef8ef", color="#4c8b56"];
+  }
+
+  subgraph cluster_ai {
+    label="AI Layer"; color="#d09595"; style="rounded";
+    ai [label="FastAPI AI Microservice\nworkout generation + food-image inference", fillcolor="#fff0f0", color="#b75c5c"];
+    model [label="Model / Feature Pipeline\nversioned inference logic", fillcolor="#fff0f0", color="#b75c5c"];
+  }
+
+  subgraph cluster_data {
+    label="Data Layer"; color="#a7a7a7"; style="rounded";
+    pg [label="PostgreSQL\nusers, plans, nutrition, consent, audit", fillcolor="#f5f7f9", color="#6c7a86"];
+    redis [label="Redis\ncache, sessions, rate-limit, pub/sub", fillcolor="#f5f7f9", color="#6c7a86"];
+    obj [label="Encrypted Object Storage\nfood images / exports", fillcolor="#f5f7f9", color="#6c7a86"];
+  }
+
+  subgraph cluster_external {
+    label="Platform & External Integrations"; color="#c7a865"; style="rounded";
+    health [label="Apple HealthKit /\nAndroid Health Connect", fillcolor="#fff8e8", color="#b58a32"];
+    food [label="Nutrition / Food Data Source", fillcolor="#fff8e8", color="#b58a32"];
+    push [label="Push Notification Provider", fillcolor="#fff8e8", color="#b58a32"];
+    obs [label="Monitoring / Audit / Alerts", fillcolor="#fff8e8", color="#b58a32"];
+  }
+
+  ios -> edgegw; android -> edgegw; web -> edgegw;
+  ios -> auth0 [label="sign-in"]; android -> auth0 [label="sign-in"]; web -> auth0 [label="sign-in"];
+  auth0 -> api [label="JWT / claims"];
+  edgegw -> api [label="HTTPS API"];
+  edgegw -> ws [label="WSS"];
+  api -> pg [label="transactions"];
+  api -> redis [label="cache / rate limit"];
+  api -> jobs [label="enqueue"];
+  ws -> redis [label="pub/sub"];
+  api -> ai [label="internal HTTPS"];
+  ai -> model;
+  ai -> pg [label="feature / result metadata"];
+  ai -> obj [label="signed image access"];
+  api -> obj [label="signed upload/download"];
+  api -> food [label="lookup"];
+  jobs -> push [label="notifications"];
+  ios -> health [label="user-consented sync"];
+  android -> health [label="user-consented sync"];
+  api -> obs [label="logs / metrics / audit"];
+  ai -> obs [label="model metrics"];
+}
