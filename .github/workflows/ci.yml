@@ -1,0 +1,36 @@
+name: FitFlow CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  repository-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify required Lab 05 documentation
+        run: |
+          test -f README.md
+          test -f docs/frontend-comparison.md
+          test -f docs/backend-database-auth-comparison.md
+          test -f docs/tech-stack-summary.md
+          test -f docs/comparison-matrix.md
+          test -f docs/adr/ADR-001-technology-stack.md
+          test -f docs/architecture/fitflow-high-level-architecture.png
+
+      - name: Verify starter project structure
+        run: |
+          test -f frontend/pubspec.yaml
+          test -f frontend/lib/main.dart
+          test -f backend/package.json
+          test -f backend/src/main.ts
+          test -f ai-service/requirements.txt
+          test -f ai-service/app/main.py
+
+      - name: Verify secrets are not committed
+        run: |
+          test ! -f .env
+          test -f .env.example
